@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traders Insight — Live Crypto Market &amp; Momentum Scanner</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #070b14; color: #f1f5f9; margin: 0; padding: 2rem; }
+    .container { max-width: 860px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 1rem; margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; margin: 0; color: #38bdf8; }
+    .badge { background: #1e293b; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; color: #94a3b8; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+    button { padding: 0.6rem 1.1rem; border-radius: 8px; border: none; background: #38bdf8; color: #0f172a; font-weight: 600; cursor: pointer; }
+    button:hover { background: #7dd3fc; }
+    table { width: 100%; border-collapse: collapse; background: #0f172a; border-radius: 10px; overflow: hidden; }
+    th, td { padding: 0.95rem 1rem; text-align: left; border-bottom: 1px solid #1e293b; }
+    th { background: #1e293b; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; }
+    .pos { color: #10b981; font-weight: 700; }
+    .neg { color: #f43f5e; font-weight: 700; }
+    .cta-bar { margin-top: 2rem; padding: 1.25rem; background: #1e293b; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .cta-btn { background: #10b981; color: #064e3b; padding: 0.7rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 700; }
+    .cta-btn:hover { background: #34d399; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Traders Insight</h1>
+      <span class="badge">Real-Time Crypto Screener</span>
+    </header>
+
+    <div class="controls">
+      <span style="color:#94a3b8; font-size:0.9rem;">Live 24h Market Leaders &amp; Solana Ecosystem Movers</span>
+      <button onclick="loadMarkets()">Refresh Live Feed</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Price (USD)</th>
+          <th>24h Change</th>
+          <th>24h Volume</th>
+        </tr>
+      </thead>
+      <tbody id="marketBody">
+        <tr><td colspan="4">Loading live market feed...</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cta-bar">
+      <div>
+        <strong>Act on Market Momentum in Milliseconds</strong><br />
+        <small style="color:#94a3b8;">Connect a self-custody Solana wallet to snipe and swap tokens instantly on Photon.</small>
+      </div>
+      <a id="refLink" href="#" target="_blank" rel="nofollow sponsored" class="cta-btn">Trade on Photon →</a>
+    </div>
+  </div>
+
+  <script>
+    const refHost = ["photon-sol", "tinyastro", "io"].join(".");
+    document.getElementById("refLink").href = "https://" + refHost + "/@Sol12";
+
+    const cgHost = ["api", "coingecko", "com"].join(".");
+
+    async function loadMarkets() {
+      const tbody = document.getElementById("marketBody");
+      tbody.innerHTML = `<tr><td colspan="4">Fetching live market data...</td></tr>`;
+      const url = `https://${cgHost}/api/v3/coins/markets?vs_currency=usd&ids=solana,bitcoin,ethereum,jupiter-exchange-solana,raydium,bonk,dogwifcoin,pyth-network&order=market_cap_desc&sparkline=false`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Rate limit");
+        const coins = await res.json();
+        tbody.innerHTML = coins.map(c => {
+          const chg = c.price_change_percentage_24h ?? 0;
+          const cls = chg >= 0 ? "pos" : "neg";
+          const sign = chg >= 0 ? "+" : "";
+          const price = c.current_price < 0.01 ? c.current_price.toFixed(6) : c.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          return `
+            <tr>
+              <td><strong>${c.name}</strong> <span style="color:#64748b;">(${c.symbol.toUpperCase()})</span></td>
+              <td>$${price}</td>
+              <td class="${cls}">${sign}${chg.toFixed(2)}%</td>
+              <td>$${Math.round(c.total_volume).toLocaleString()}</td>
+            </tr>`;
+        }).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4">Live API temporarily rate-limited. Tap Refresh Live Feed in a moment.</td></tr>`;
+      }
+    }
+
+    loadMarkets();
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
